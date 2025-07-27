@@ -58,12 +58,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final user = userCredential.user;
 
-      // Сохраняем профиль в Realtime Database
+      
       await FirebaseDatabase.instance.ref('users/${user!.uid}').set({
         'uid': user.uid,
         'email': user.email,
         'username': username,
-        'friendIds': [],   // массив в realtime db тоже поддерживается
+        'friendIds': [],   
         'createdAt': ServerValue.timestamp,
       });
 
