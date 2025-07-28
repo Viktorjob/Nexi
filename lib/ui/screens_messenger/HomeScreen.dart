@@ -1,5 +1,12 @@
+import 'dart:async';
+
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nexi/ui/function/friends_service.dart';
+import 'package:nexi/ui/screens_messenger/screen_delete_friends.dart';
+import 'package:nexi/ui/screens_messenger/screen_dialog.dart';
+import 'screen_add_friends.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -8,62 +15,76 @@ class HomeScreen extends StatefulWidget {
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> _friends = [];
+  StreamSubscription<List<Map<String, String>>>? _friendsSubscription;
+  List<Map<String, String>> _friends = [];
 
-  void _showAddFriendDialog() {
-    final TextEditingController uidController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    _friendsSubscription = FriendService.subscribeToFriendsStream(widget.user.uid).listen((friendsList) {
+      if (mounted) {
+        setState(() {
+          _friends = friendsList;
+        });
+      }
+    });
+  }
 
-    showDialog(
+
+
+  void _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
+  void _openFriendProfile(Map<String, String> friend) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FriendProfileScreen(
+          currentUserId: widget.user.uid,
+          friendUserId: friend['uid']!,
+          friendUsername: friend['username']!,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _friendsSubscription?.cancel();
+    super.dispose();
+  }
+
+
+  void _showAddFriend() {
+    showAddFriendDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Добавить друга'),
-          content: TextField(
-            controller: uidController,
-            decoration: const InputDecoration(hintText: 'Введите UID'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Закрыть диалог
-              },
-              child: const Text('Отмена'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final uid = uidController.text.trim();
-                if (uid.isNotEmpty && !_friends.contains(uid)) {
-                  setState(() {
-                    _friends.add(uid);
-                  });
-                }
-                Navigator.of(context).pop(); // Закрыть диалог
-              },
-              child: const Text('Добавить'),
-            ),
-          ],
-        );
+      friends: _friends,
+      onFriendAdded: (friend) {
+        // Не добавляем friend вручную в _friends!
+        // Просто доверяем подписке, что она обновит список.
       },
     );
   }
 
-  void _logout() {
-    // Здесь можно добавить логику выхода из аккаунта
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: const Text('Home'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_add), // Иконка "Добавить друга"
-            onPressed: _showAddFriendDialog,
+            icon: const Icon(Icons.person_add),
+            onPressed: _showAddFriend,
           ),
           IconButton(
             icon: const Icon(Icons.logout),
@@ -75,18 +96,36 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const SizedBox(height: 16),
           const Text(
-            'Список друзей:',
+            'Friends list:',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           Expanded(
             child: _friends.isEmpty
-                ? const Center(child: Text('Друзья не добавлены'))
+                ? const Center(child: Text('Friends not added'))
                 : ListView.builder(
               itemCount: _friends.length,
               itemBuilder: (context, index) {
+                final friend = _friends[index];
                 return ListTile(
                   leading: const Icon(Icons.person),
-                  title: Text(_friends[index]),
+                  title: Text(friend['username'] ?? 'Unknown'),
+                  onTap: () => _openFriendProfile(friend),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      showDeleteFriendDialog(
+                        context: context,
+                        currentUid: widget.user.uid,
+                        friend: friend,
+                        onDeleted: () {
+                          setState(() {
+                            _friends.removeWhere(
+                                    (f) => f['uid'] == friend['uid']);
+                          });
+                        },
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -96,3 +135,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
