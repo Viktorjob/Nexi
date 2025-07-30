@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nexi/menu_drawer/menu_drawer.dart';
 import 'package:nexi/ui/function/friends_service.dart';
 import 'package:nexi/ui/screens_messenger/screen_delete_friends.dart';
 import 'package:nexi/ui/screens_messenger/screen_dialog.dart';
@@ -77,10 +78,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.person_add),
@@ -92,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      drawer: AppDrawer(uid: widget.user.uid),
       body: Column(
         children: [
           const SizedBox(height: 16),

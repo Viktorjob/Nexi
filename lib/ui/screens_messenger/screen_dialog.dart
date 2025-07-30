@@ -1,5 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:nexi/ai_intelligent/screen/ai_screen.dart';
+import 'package:nexi/ui/screens_messenger/screen_add_friends.dart';
 
 class FriendProfileScreen extends StatefulWidget {
   final String currentUserId;
@@ -49,7 +51,21 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.friendUsername)),
+      appBar: AppBar(title: Text(widget.friendUsername),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.smart_toy_outlined),
+              iconSize: 40.0,
+              onPressed: () {
+                ai_screen(context);
+              },
+
+            ),
+          )
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
