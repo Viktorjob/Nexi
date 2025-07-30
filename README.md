@@ -1,52 +1,65 @@
 # 📱 Nexi – Smart Firebase-Based Messenger
-## 🚀 Nexi is a modern Flutter-based messenger app with real-time chat, friend management, and WebRTC-powered video calls.
-
-Built on top of Firebase and Flutter WebRTC, Nexi provides a sleek and efficient communication experience — from messaging to face-to-face conversations.
+🚀 Nexi is a modern Flutter-based messenger app with real-time chat, friend management, video calling, and an AI conversation assistant.
+Built on top of Firebase, Flutter WebRTC, and DeepSeek AI, Nexi delivers a seamless communication experience — from quick messaging to intelligent, AI-enhanced interactions.
 
 ## ✨ Key Features
 ### 💬 Real-Time Messaging
 Send and receive messages instantly via Firebase Realtime Database
 
-Organized chat threads with user-friendly UI
+Organized chat threads with clean, responsive UI
 
 Message updates and sync across devices in real time
 
 ### 👥 Friend & Chat Management
-Add and remove friends with instant updates
+Add or remove friends with real-time updates
 
-Create and delete chat conversations
+Create, manage, and delete chat conversations
 
-Seamless friend discovery and interaction
+Easy friend discovery and interaction flow
 
 ### 📹 Video Calling with WebRTC
 One-on-one video calls powered by flutter_webrtc
 
-Low-latency, peer-to-peer communication
+Peer-to-peer, low-latency audio/video communication
 
-Simple interface for starting and receiving calls
+Minimal, intuitive call interface
+
+### 🤖 AI-Powered Assistant (DeepSeek Chat)
+Smart AI assistant that participates in conversations between two users
+
+Helps break the ice, generate topic ideas, or assist in discussions
+
+Built on DeepSeek AI for natural language understanding
+
+Optional and non-intrusive — joinable in any chat on demand
 
 ### 🔧 Technical Stack
 ✅ Core Technologies
+
 Flutter – Cross-platform UI framework
 
-Firebase – Authentication, Realtime Database, Firestore
+Firebase – Auth, Realtime Database, Firestore
 
-WebRTC – Real-time video & audio calling via flutter_webrtc
+WebRTC – Real-time audio/video via flutter_webrtc
 
-flutter_bloc – State management with BLoC pattern
+flutter_bloc – Predictable state management
 
-Freezed & Build Runner – Code generation for immutable state classes
+Freezed + Build Runner – Immutable data & code generation
 
-email_validator – For validating email inputs during registration
+email_validator – Validates user emails
+
+DeepSeek AI – Embedded chat assistant with conversational intelligence
 
 ### 📲 App Flow
-User Authentication using Firebase Auth
+Authenticate with Firebase
 
-Add Friends and start conversations
+Add friends and create new chat sessions
 
-Send Messages in real-time
+Send real-time messages instantly
 
-Initiate Video Calls using WebRTC
+Start or receive video calls
 
-Manage Chats – delete or create new conversations
+Invite AI Assistant into conversations as needed
+
+Manage chats — archive or delete any time
 
