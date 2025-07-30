@@ -1,16 +1,52 @@
-# nexi
+#📱 Nexi – Smart Firebase-Based Messenger
+##🚀 Nexi is a modern Flutter-based messenger app with real-time chat, friend management, and WebRTC-powered video calls.
 
-A new Flutter project.
+Built on top of Firebase and Flutter WebRTC, Nexi provides a sleek and efficient communication experience — from messaging to face-to-face conversations.
 
-## Getting Started
+##✨ Key Features
+###💬 Real-Time Messaging
+Send and receive messages instantly via Firebase Realtime Database
 
-This project is a starting point for a Flutter application.
+Organized chat threads with user-friendly UI
 
-A few resources to get you started if this is your first Flutter project:
+Message updates and sync across devices in real time
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+###👥 Friend & Chat Management
+Add and remove friends with instant updates
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Create and delete chat conversations
+
+Seamless friend discovery and interaction
+
+###📹 Video Calling with WebRTC
+One-on-one video calls powered by flutter_webrtc
+
+Low-latency, peer-to-peer communication
+
+Simple interface for starting and receiving calls
+
+###🔧 Technical Stack
+✅ Core Technologies
+Flutter – Cross-platform UI framework
+
+Firebase – Authentication, Realtime Database, Firestore
+
+WebRTC – Real-time video & audio calling via flutter_webrtc
+
+flutter_bloc – State management with BLoC pattern
+
+Freezed & Build Runner – Code generation for immutable state classes
+
+email_validator – For validating email inputs during registration
+
+###📲 App Flow
+User Authentication using Firebase Auth
+
+Add Friends and start conversations
+
+Send Messages in real-time
+
+Initiate Video Calls using WebRTC
+
+Manage Chats – delete or create new conversations
+
