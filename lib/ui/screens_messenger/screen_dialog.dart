@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:nexi/ai_intelligent/screen/ai_screen.dart';
+import 'package:nexi/camera/ui_camera/ui_camera.dart';
 import 'package:nexi/ui/screens_messenger/screen_add_friends.dart';
 
 class FriendProfileScreen extends StatefulWidget {
@@ -61,6 +62,26 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
               onPressed: () {
                 ai_screen(context);
               },
+
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.camera_alt),
+              iconSize: 40.0,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UiCamera(
+                      currentUserId: widget.currentUserId,
+                      remoteUserId: widget.friendUserId,
+                    ),
+                  ),
+                );
+              },
+
 
             ),
           )

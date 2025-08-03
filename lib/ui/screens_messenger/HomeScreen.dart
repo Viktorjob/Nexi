@@ -69,8 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       friends: _friends,
       onFriendAdded: (friend) {
-        // Не добавляем friend вручную в _friends!
-        // Просто доверяем подписке, что она обновит список.
+
       },
     );
   }
