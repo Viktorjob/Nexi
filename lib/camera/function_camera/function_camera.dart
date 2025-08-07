@@ -42,7 +42,12 @@ class CallService {
       },
       'optional': [],
     };
-
+    if (localRenderer.srcObject != null) {
+      for (var track in localRenderer.srcObject!.getTracks()) {
+        track.stop();
+      }
+      localRenderer.srcObject = null;
+    }
     _peerConnection = await createPeerConnection(configuration, offerSdpConstraints);
 
     _peerConnection.onIceCandidate = (RTCIceCandidate? candidate) {
@@ -56,6 +61,11 @@ class CallService {
       print('Track received: ${event.track.kind}');
       if (event.track.kind == 'video' && event.streams.isNotEmpty) {
         print('Setting up a remote video stream');
+        if (remoteRenderer.srcObject != null) {
+          for (var track in remoteRenderer.srcObject!.getTracks()) {
+            track.stop();
+          }
+        }
         remoteRenderer.srcObject = event.streams[0];
         if (onRemoteStreamSet != null) {
           onRemoteStreamSet!();

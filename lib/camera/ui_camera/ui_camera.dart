@@ -89,11 +89,11 @@ class _UiCameraState extends State<UiCamera> {
         child: _callAnswered
             ? Column(
           children: [
-
+            // Всегда показываем контейнер для удаленного видео
             Expanded(
               child: _callService.remoteRenderer.srcObject != null
                   ? RTCVideoView(_callService.remoteRenderer)
-                  : const Center(child: Text("Connecting video...")),
+                  : const Center(child: Text("Подключение видео...")),
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -125,4 +125,3 @@ class _UiCameraState extends State<UiCamera> {
   }
 
 }
-
