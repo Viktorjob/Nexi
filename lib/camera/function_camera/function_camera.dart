@@ -18,16 +18,22 @@ class CallService {
     await remoteRenderer.initialize();
   }
 
-  Future<void> createPeerConnection() async {
-    final configuration = {
+  Future<void> initializePeerConnection() async {
+    final Map<String, dynamic> configuration = {
       'iceServers': [
         {'urls': 'stun:stun.l.google.com:19302'},
       ],
     };
 
-    final constraints = <String, dynamic>{};
+    final Map<String, dynamic> offerSdpConstraints = {
+      'mandatory': {
+        'OfferToReceiveAudio': true,
+        'OfferToReceiveVideo': true,
+      },
+      'optional': [],
+    };
 
-    //_peerConnection = await createPeerConnection(configuration, constraints);
+    _peerConnection = await createPeerConnection(configuration, offerSdpConstraints);
 
     _peerConnection.onIceCandidate = (RTCIceCandidate candidate) {
       if (candidate.candidate != null) {
@@ -57,9 +63,8 @@ class CallService {
   }
 
 
-
   Future<void> makeCall() async {
-    await createPeerConnection();
+    await initializePeerConnection();
 
     final offer = await _peerConnection.createOffer();
     await _peerConnection.setLocalDescription(offer);
@@ -88,18 +93,24 @@ class CallService {
   }
 
   Future<void> answerCall() async {
-    await createPeerConnection();
+    await initializePeerConnection();
 
-    db.child('calls/$currentUserId/offer').once().then((event) async {
-      final offerData = event.snapshot.value as Map;
-      final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
-      await _peerConnection.setRemoteDescription(offer);
+    final event = await db.child('calls/$currentUserId/offer').once();
+    final offerDataRaw = event.snapshot.value;
 
-      final answer = await _peerConnection.createAnswer();
-      await _peerConnection.setLocalDescription(answer);
+    if (offerDataRaw == null) {
+      print('Offer data is null — call not found');
+      return;
+    }
 
-      db.child('calls/$remoteUserId/answer').set(answer.toMap());
-    });
+    final offerData = offerDataRaw as Map;
+    final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
+    await _peerConnection.setRemoteDescription(offer);
+
+    final answer = await _peerConnection.createAnswer();
+    await _peerConnection.setLocalDescription(answer);
+
+    await db.child('calls/$remoteUserId/answer').set(answer.toMap());
 
     db.child('calls/$currentUserId/candidates').onChildAdded.listen((event) {
       final data = event.snapshot.value as Map;
@@ -113,6 +124,8 @@ class CallService {
       }
     };
   }
+
+
 
   void endCall() {
     _peerConnection.close();

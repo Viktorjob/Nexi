@@ -33,6 +33,7 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
   void initState() {
     super.initState();
     _messagesRef = FirebaseDatabase.instance.ref('chats/$chatId/messages');
+    listenForIncomingCalls(widget.currentUserId);
   }
 
   void _sendMessage() {
@@ -48,6 +49,34 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
     _messagesRef.push().set(message);
     _controller.clear();
   }
+  void listenForIncomingCalls(String currentUserId) {
+    FirebaseDatabase.instance
+        .ref('calls/$currentUserId/offer')
+        .onValue
+        .listen((event) {
+      if (event.snapshot.value != null) {
+        final data = event.snapshot.value as Map;
+        final callerId = data['callerId'];
+
+        if (callerId == null || callerId is! String) {
+          print('Error: callerId is missing or not a string');
+          return;
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UiCamera(
+              currentUserId: currentUserId,
+              remoteUserId: callerId,
+              isCaller: false,
+            ),
+          ),
+        );
+      }
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +106,7 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                     builder: (context) => UiCamera(
                       currentUserId: widget.currentUserId,
                       remoteUserId: widget.friendUserId,
+                      isCaller: true,
                     ),
                   ),
                 );
@@ -102,7 +132,7 @@ class _FriendProfileScreenState extends State<FriendProfileScreen> {
                     .map((e) => {'key': e.key, ...Map<String, dynamic>.from(e.value)})
                     .toList();
 
-                // Сортируем по timestamp
+
                 messagesList.sort((a, b) => (a['timestamp'] as int).compareTo(b['timestamp'] as int));
 
                 return ListView.builder(
