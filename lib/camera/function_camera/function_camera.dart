@@ -5,7 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 class CallService {
   final String currentUserId;
   final String remoteUserId;
-
+  Function? onRemoteStreamSet;
   late RTCPeerConnection _peerConnection;
   final RTCVideoRenderer localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
@@ -57,6 +57,9 @@ class CallService {
       if (event.track.kind == 'video' && event.streams.isNotEmpty) {
         print('Setting up a remote video stream');
         remoteRenderer.srcObject = event.streams[0];
+        if (onRemoteStreamSet != null) {
+          onRemoteStreamSet!();
+        }
       }
     };
 

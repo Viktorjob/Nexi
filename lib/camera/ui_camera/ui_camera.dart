@@ -48,6 +48,9 @@ class _UiCameraState extends State<UiCamera> {
 
     if (cameraStatus.isGranted && micStatus.isGranted) {
       await _callService.initRenderers();
+      _callService.onRemoteStreamSet = () {
+        if (mounted) setState(() {});
+      };
 
       if (widget.isCaller) {
         await _callService.makeCall();
@@ -86,7 +89,12 @@ class _UiCameraState extends State<UiCamera> {
         child: _callAnswered
             ? Column(
           children: [
-            Expanded(child: RTCVideoView(_callService.remoteRenderer)),
+
+            Expanded(
+              child: _callService.remoteRenderer.srcObject != null
+                  ? RTCVideoView(_callService.remoteRenderer)
+                  : const Center(child: Text("Connecting video...")),
+            ),
             const SizedBox(height: 10),
             SizedBox(
               height: 150,
