@@ -4,7 +4,6 @@ import 'package:nexi/auth/authentication/bloc/auth_bloc.dart';
 import 'package:nexi/auth/authentication/bloc/auth_event.dart';
 import 'package:nexi/auth/authentication/bloc/auth_state.dart';
 
-
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
 
@@ -34,63 +33,115 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) => value!.isEmpty ? 'Enter your email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) => value!.length < 6 ? 'Minimum 6 characters' : null,
-              ),
-              const SizedBox(height: 20),
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  final String? errorMessage = state.maybeMap(
-                    error: (s) => s.message,
-                    orElse: () => null,
-                  );
+      backgroundColor: const Color(0xFFF7F9FC),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Welcome Back',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Login to continue',
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
 
-                  final bool isLoading = state is Loading;
+                // Email
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.email),
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                  value!.isEmpty ? 'Enter your email' : null,
+                ),
+                const SizedBox(height: 16),
 
-                  return Column(
-                    children: [
-                      if (errorMessage != null)
-                        Text(errorMessage, style: const TextStyle(color: Colors.red)),
+                // Password
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.lock),
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                  value!.length < 6 ? 'Minimum 6 characters' : null,
+                ),
+                const SizedBox(height: 24),
 
-                      if (isLoading)
-                        const CircularProgressIndicator()
-                      else ...[
-                        ElevatedButton(
-                          onPressed: _submitLogin,
-                          child: const Text('Login'),
+                // BlocBuilder
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final String? errorMessage = state.maybeMap(
+                      error: (s) => s.message,
+                      orElse: () => null,
+                    );
+
+                    final bool isLoading = state is Loading;
+
+                    return Column(
+                      children: [
+                        if (errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(errorMessage,
+                                style: const TextStyle(color: Colors.red)),
+                          ),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : _submitLogin,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: isLoading
+                                ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                                : const Text(
+                              'Login',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
-                          child: const Text('Sign up.'),
-                        ),
+
+                        const SizedBox(height: 12),
+
                         TextButton(
                           onPressed: () => Navigator.pushNamed(context, '/reset'),
                           child: const Text('Forgot password?'),
                         ),
+                        TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          child: const Text('Don\'t have an account? Sign up'),
+                        ),
                       ],
-                    ],
-                  );
-                },
-              ),
-
-
-
-            ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

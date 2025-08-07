@@ -5,19 +5,6 @@ import 'package:nexi/auth/authentication/bloc/auth_event.dart';
 import 'package:nexi/auth/authentication/bloc/auth_state.dart';
 import 'package:nexi/auth/screens/login_screen.dart';
 
-class ResetPasswordSuccessScreen extends StatelessWidget {
-  const ResetPasswordSuccessScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Successful')),
-      body: const Center(
-        child: Text('Check your email to reset your password'),
-      ),
-    );
-  }
-}
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 
@@ -30,63 +17,118 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _emailController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    context.read<AuthBloc>().add(const AuthEvent.clearError());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Password reset')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const Text('Enter your email to reset your password'),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) => value!.isEmpty ? 'Enter email' : null,
-              ),
-              const SizedBox(height: 20),
-              BlocConsumer<AuthBloc, AuthState>(
-                listener: (context, state) {
-                  state.mapOrNull(
-                    passwordResetSent: (_) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('An email has been sent to your inbox')),
-                      );
-                      Navigator.pop(context);
-                    },
-                    error: (s) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(s.message), backgroundColor: Colors.red),
-                      );
-                    },
-                  );
-                },
-                builder: (context, state) {
-                  return state.maybeMap(
-                    loading: (_) => const CircularProgressIndicator(),
-                    orElse: () => Column(
+      backgroundColor: const Color(0xFFF7F9FC),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Reset Password',
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Enter your email address below and we\'ll send you a reset link.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.email),
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                  value!.isEmpty ? 'Enter your email' : null,
+                ),
+                const SizedBox(height: 24),
+
+                BlocConsumer<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    state.mapOrNull(
+                      passwordResetSent: (_) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Reset email sent. Check your inbox.'),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      },
+                      error: (s) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(s.message),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  builder: (context, state) {
+                    final isLoading = state is Loading;
+
+                    return Column(
                       children: [
-                        ElevatedButton(
-                          onPressed: _resetPassword,
-                          child: const Text('Reset password'),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: isLoading ? null : _resetPassword,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: isLoading
+                                ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                                : const Text(
+                              'Send Reset Link',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
                         ),
+                        const SizedBox(height: 12),
                         TextButton(
                           onPressed: () {
                             Navigator.pushAndRemoveUntil(
                               context,
-                              MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                  (Route<dynamic> route) => false,
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                                  (route) => false,
                             );
                           },
-                          child: const Text('Back'),
+                          child: const Text('Back to login'),
                         ),
                       ],
-                    ),
-                  );
-                },
-              ),
-            ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -95,13 +137,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   void _resetPassword() {
     if (_formKey.currentState!.validate()) {
-      context.read<AuthBloc>().add(AuthEvent.resetPassword(_emailController.text.trim()));
+      context.read<AuthBloc>().add(
+        AuthEvent.resetPassword(_emailController.text.trim()),
+      );
     }
-  }
-  @override
-  void initState() {
-    super.initState();
-    context.read<AuthBloc>().add(const AuthEvent.clearError());
   }
 
   @override

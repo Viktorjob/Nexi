@@ -9,7 +9,7 @@ class AppDrawer extends StatelessWidget {
   void _copyUid(BuildContext context) {
     Clipboard.setData(ClipboardData(text: uid));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('UID скопирован: $uid')),
+      SnackBar(content: Text('UID copy: $uid')),
     );
   }
 

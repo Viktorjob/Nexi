@@ -27,7 +27,7 @@ class CallService {
 
     final constraints = <String, dynamic>{};
 
-    _peerConnection = await createPeerConnection(configuration, constraints);
+    //_peerConnection = await createPeerConnection(configuration, constraints);
 
     _peerConnection.onIceCandidate = (RTCIceCandidate candidate) {
       if (candidate.candidate != null) {

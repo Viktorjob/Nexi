@@ -17,26 +17,27 @@ class FriendService {
     try {
       final db = FirebaseDatabase.instance.ref();
 
-
       await db.child('userFriends/$currentUid/$friendUid').remove();
       await db.child('userFriends/$friendUid/$currentUid').remove();
-
 
       final chatId = getChatId(currentUid, friendUid);
       await db.child('chats/$chatId').remove();
 
       onSuccess();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend and chat deleted')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Friend and chat deleted')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error while deleting: $e')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error while deleting: $e')),
+        );
+      }
     }
   }
-
 
 
   static Future<void> addFriend({

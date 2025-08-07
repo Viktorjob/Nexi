@@ -11,12 +11,12 @@ void showDeleteFriendDialog({
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Удалить друга'),
-      content: Text('Удалить ${friend['username']} из друзей?'),
+      title: const Text('Remove a friend'),
+      content: Text('Delete ${friend['username']} from friends?'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text('Отмена'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: () {
@@ -29,7 +29,7 @@ void showDeleteFriendDialog({
               onSuccess: onDeleted,
             );
           },
-          child: const Text('Удалить'),
+          child: const Text('Delete'),
         ),
       ],
     ),

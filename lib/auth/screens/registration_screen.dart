@@ -6,14 +6,12 @@ import 'package:nexi/auth/authentication/bloc/auth_event.dart';
 import 'package:nexi/auth/authentication/bloc/auth_state.dart';
 import 'package:nexi/auth/screens/verify_email_screen.dart';
 
-
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
 }
-
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -22,10 +20,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _confirmPasswordController = TextEditingController();
   final _usernameController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    context.read<AuthBloc>().add(const AuthEvent.clearError());
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is EmailVerificationSent) {
@@ -35,85 +37,148 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           );
         }
       },
-
       child: Scaffold(
-      appBar: AppBar(title: const Text('Registration')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
-                validator: (value) => value!.isEmpty ? 'Enter username' : null,
-              ),
+        backgroundColor: const Color(0xFFF7F9FC),
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Create Account',
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Join us by filling the form below',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 32),
 
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) => value!.isEmpty ? 'Enter email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) => value!.length < 6 ? 'Minimum 6 characters' : null,
-              ),
-              TextFormField(
-                controller: _confirmPasswordController,
-                decoration: const InputDecoration(labelText: 'Confirm password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  final String? errorMessage = state.maybeMap(
-                    error: (s) => s.message,
-                    orElse: () => null,
-                  );
+                  // Username
+                  TextFormField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.person),
+                      labelText: 'Username',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                    value!.isEmpty ? 'Enter username' : null,
+                  ),
+                  const SizedBox(height: 16),
 
-                  final bool isLoading = state is Loading;
+                  // Email
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.email),
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                    value!.isEmpty ? 'Enter email' : null,
+                  ),
+                  const SizedBox(height: 16),
 
-                  return Column(
-                    children: [
-                      if (errorMessage != null)
-                        Text(errorMessage, style: const TextStyle(color: Colors.red)),
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.lock),
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                    value!.length < 6 ? 'Minimum 6 characters' : null,
+                  ),
+                  const SizedBox(height: 16),
 
-                      if (isLoading)
-                        const CircularProgressIndicator()
-                      else...[
-                        ElevatedButton(
-                          onPressed: _submitRegistration,
-                          child: const Text('Register'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Back'),
-                        ),
-                      ]
-                    ],
-                  );
-                },
+                  // Confirm Password
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.lock_outline),
+                      labelText: 'Confirm Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // BlocBuilder
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final String? errorMessage = state.maybeMap(
+                        error: (s) => s.message,
+                        orElse: () => null,
+                      );
+
+                      final bool isLoading = state is Loading;
+
+                      return Column(
+                        children: [
+                          if (errorMessage != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(
+                                errorMessage,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _submitRegistration,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: isLoading
+                                  ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                                  : const Text(
+                                'Register',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Already have an account? Login'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
-    ),
     );
-  }
-  @override
-  void initState() {
-    super.initState();
-    context.read<AuthBloc>().add(const AuthEvent.clearError());
   }
 
   void _submitRegistration() {
