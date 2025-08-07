@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -9,7 +9,12 @@ class CallService {
   late RTCPeerConnection _peerConnection;
   final RTCVideoRenderer localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
+
   final DatabaseReference db = FirebaseDatabase.instance.ref();
+
+  StreamSubscription? _candidatesSubscription;
+  StreamSubscription? _answerSubscription;
+  StreamSubscription? _offerSubscription;
 
   CallService({required this.currentUserId, required this.remoteUserId});
 
@@ -19,13 +24,18 @@ class CallService {
   }
 
   Future<void> initializePeerConnection() async {
-    final Map<String, dynamic> configuration = {
+    final configuration = {
       'iceServers': [
         {'urls': 'stun:stun.l.google.com:19302'},
+        {
+          'urls': 'turn:your_turn_server.com:3478',
+          'username': 'user',
+          'credential': 'pass'
+        },
       ],
     };
 
-    final Map<String, dynamic> offerSdpConstraints = {
+    final offerSdpConstraints = {
       'mandatory': {
         'OfferToReceiveAudio': true,
         'OfferToReceiveVideo': true,
@@ -35,18 +45,17 @@ class CallService {
 
     _peerConnection = await createPeerConnection(configuration, offerSdpConstraints);
 
-    _peerConnection.onIceCandidate = (RTCIceCandidate candidate) {
-      if (candidate.candidate != null) {
-        db.child('calls/$remoteUserId/candidates').push().set({
-          'candidate': candidate.candidate,
-          'sdpMid': candidate.sdpMid,
-          'sdpMLineIndex': candidate.sdpMLineIndex,
-        });
+    _peerConnection.onIceCandidate = (RTCIceCandidate? candidate) {
+      if (candidate != null && candidate.candidate != null) {
+        print('We send ICE candidate: ${candidate.candidate}');
+        db.child('calls/$remoteUserId/candidates').push().set(candidate.toMap());
       }
     };
 
     _peerConnection.onTrack = (RTCTrackEvent event) {
-      if (event.track.kind == 'video') {
+      print('Track received: ${event.track.kind}');
+      if (event.track.kind == 'video' && event.streams.isNotEmpty) {
+        print('Setting up a remote video stream');
         remoteRenderer.srcObject = event.streams[0];
       }
     };
@@ -57,11 +66,12 @@ class CallService {
     });
 
     localRenderer.srcObject = mediaStream;
+
     for (var track in mediaStream.getTracks()) {
-      _peerConnection.addTrack(track, mediaStream);
+      await _peerConnection.addTrack(track, mediaStream);
+      print('Local track added: ${track.kind}');
     }
   }
-
 
   Future<void> makeCall() async {
     await initializePeerConnection();
@@ -69,69 +79,83 @@ class CallService {
     final offer = await _peerConnection.createOffer();
     await _peerConnection.setLocalDescription(offer);
 
-    db.child('calls/$remoteUserId/offer').set({
+    await db.child('calls/$remoteUserId/offer').set({
       'sdp': offer.sdp,
       'type': offer.type,
+      'callerId': currentUserId,
     });
 
-
-    db.child('calls/$currentUserId/answer').onValue.listen((event) async {
-      if (event.snapshot.value != null) {
-        final answer = RTCSessionDescription(
-          (event.snapshot.value as Map)['sdp'],
-          (event.snapshot.value as Map)['type'],
-        );
+    _answerSubscription = db.child('calls/$currentUserId/answer').onValue.listen((event) async {
+      final val = event.snapshot.value;
+      if (val is Map && val['sdp'] != null && val['type'] != null) {
+        final answer = RTCSessionDescription(val['sdp'], val['type']);
         await _peerConnection.setRemoteDescription(answer);
       }
     });
 
-    db.child('calls/$currentUserId/candidates').onChildAdded.listen((event) {
-      final data = event.snapshot.value as Map;
-      final candidate = RTCIceCandidate(data['candidate'], data['sdpMid'], data['sdpMLineIndex']);
-      _peerConnection.addCandidate(candidate);
-    });
+    _listenForCandidates();
   }
 
   Future<void> answerCall() async {
     await initializePeerConnection();
+    _listenForCandidates();
 
-    final event = await db.child('calls/$currentUserId/offer').once();
-    final offerDataRaw = event.snapshot.value;
+    _offerSubscription = db.child('calls/$currentUserId/offer').onValue.listen((event) async {
+      final offerDataRaw = event.snapshot.value;
+      if (offerDataRaw is Map && offerDataRaw['sdp'] != null && offerDataRaw['type'] != null) {
+        print('Received offer');
+        final offer = RTCSessionDescription(offerDataRaw['sdp'], offerDataRaw['type']);
+        await _peerConnection.setRemoteDescription(offer);
 
-    if (offerDataRaw == null) {
-      print('Offer data is null — call not found');
-      return;
-    }
+        final answer = await _peerConnection.createAnswer();
+        await _peerConnection.setLocalDescription(answer);
 
-    final offerData = offerDataRaw as Map;
-    final offer = RTCSessionDescription(offerData['sdp'], offerData['type']);
-    await _peerConnection.setRemoteDescription(offer);
+        print('Sending answer');
+        await db.child('calls/$remoteUserId/answer').set(answer.toMap());
 
-    final answer = await _peerConnection.createAnswer();
-    await _peerConnection.setLocalDescription(answer);
-
-    await db.child('calls/$remoteUserId/answer').set(answer.toMap());
-
-    db.child('calls/$currentUserId/candidates').onChildAdded.listen((event) {
-      final data = event.snapshot.value as Map;
-      final candidate = RTCIceCandidate(data['candidate'], data['sdpMid'], data['sdpMLineIndex']);
-      _peerConnection.addCandidate(candidate);
-    });
-
-    _peerConnection.onIceCandidate = (RTCIceCandidate candidate) {
-      if (candidate.candidate != null) {
-        db.child('calls/$remoteUserId/candidates').push().set(candidate.toMap());
+        await _offerSubscription?.cancel();
+        _offerSubscription = null;
       }
-    };
+    });
   }
 
+  void _listenForCandidates() {
+    _candidatesSubscription = db.child('calls/$currentUserId/candidates').onChildAdded.listen((event) {
+      final data = event.snapshot.value;
+      if (data is Map && data['candidate'] != null) {
+        final candidate = RTCIceCandidate(
+          data['candidate'],
+          data['sdpMid'],
+          data['sdpMLineIndex'],
+        );
+        print('Adding an ICE candidate: ${candidate.candidate}');
+        _peerConnection.addCandidate(candidate);
+      }
+    });
+  }
 
+  Future<void> endCall() async {
+    await _peerConnection.close();
+    await db.child('calls/$currentUserId').remove();
+    await db.child('calls/$remoteUserId').remove();
+    disposeRenderers();
+    _cancelSubscriptions();
+  }
 
-  void endCall() {
-    _peerConnection.close();
-    db.child('calls/$currentUserId').remove();
-    db.child('calls/$remoteUserId').remove();
+  void disposeRenderers() {
     localRenderer.dispose();
     remoteRenderer.dispose();
+  }
+
+  void _cancelSubscriptions() {
+    _candidatesSubscription?.cancel();
+    _answerSubscription?.cancel();
+    _offerSubscription?.cancel();
+  }
+
+  Future<void> dispose() async {
+    _cancelSubscriptions();
+    await _peerConnection.close();
+    disposeRenderers();
   }
 }

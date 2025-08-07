@@ -18,24 +18,31 @@ class UiCamera extends StatefulWidget {
   @override
   State<UiCamera> createState() => _UiCameraState();
 }
-
 class _UiCameraState extends State<UiCamera> {
   late CallService _callService;
   bool _callAnswered = false;
-
+  String callStatus = '';
   @override
   void initState() {
     super.initState();
-
     _callService = CallService(
       currentUserId: widget.currentUserId,
       remoteUserId: widget.remoteUserId,
     );
 
-    _startCallProcess();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _callService.initRenderers();
+      _startCallProcess();
+    });
   }
 
   Future<void> _startCallProcess() async {
+    await _callService.initRenderers();
+    setState(() {
+      callStatus = widget.isCaller ? 'Calling...' : 'Incoming call';
+    });
+
     final cameraStatus = await Permission.camera.request();
     final micStatus = await Permission.microphone.request();
 
@@ -43,28 +50,14 @@ class _UiCameraState extends State<UiCamera> {
       await _callService.initRenderers();
 
       if (widget.isCaller) {
-
         await _callService.makeCall();
-        setState(() {
-          _callAnswered = true;
-        });
+      } else {
+        await _callService.answerCall();
       }
 
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera and microphone permissions required')),
-      );
-    }
-  }
-
-  Future<void> _requestPermissionsAndAnswer() async {
-    final cameraStatus = await Permission.camera.request();
-    final micStatus = await Permission.microphone.request();
-
-    if (cameraStatus.isGranted && micStatus.isGranted) {
-      await _callService.answerCall();
       setState(() {
         _callAnswered = true;
+        callStatus = 'Call connected';
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +65,8 @@ class _UiCameraState extends State<UiCamera> {
       );
     }
   }
+
+
 
   @override
   void dispose() {
@@ -109,11 +104,17 @@ class _UiCameraState extends State<UiCamera> {
             ),
           ],
         )
-            : ElevatedButton(
-          onPressed: _requestPermissionsAndAnswer,
-          child: const Text('Answer'),
+            : Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            Text(callStatus),
+          ],
         ),
       ),
     );
   }
+
 }
+
