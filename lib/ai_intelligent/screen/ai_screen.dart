@@ -39,7 +39,7 @@ void ai_screen(BuildContext context) {
               setState(() {
                 messages.add({
                   'role': 'ai',
-                  'text': 'Ошибка: ${e.toString()}'
+                  'text': 'Error: ${e.toString()}'
                 });
                 isLoading = false;
               });
