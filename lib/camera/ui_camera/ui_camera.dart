@@ -32,17 +32,11 @@ class _UiCameraState extends State<UiCamera> {
 
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _callService.initRenderers();
-      _startCallProcess();
+      await _startCallProcess();
     });
   }
 
   Future<void> _startCallProcess() async {
-    await _callService.initRenderers();
-    setState(() {
-      callStatus = widget.isCaller ? 'Calling...' : 'Incoming call';
-    });
-
     final cameraStatus = await Permission.camera.request();
     final micStatus = await Permission.microphone.request();
 
@@ -89,11 +83,11 @@ class _UiCameraState extends State<UiCamera> {
         child: _callAnswered
             ? Column(
           children: [
-            // Всегда показываем контейнер для удаленного видео
+
             Expanded(
               child: _callService.remoteRenderer.srcObject != null
                   ? RTCVideoView(_callService.remoteRenderer)
-                  : const Center(child: Text("Подключение видео...")),
+                  : const Center(child: Text("Connecting video...")),
             ),
             const SizedBox(height: 10),
             SizedBox(
