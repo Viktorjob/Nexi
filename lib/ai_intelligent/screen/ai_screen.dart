@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:nexi/ai_intelligent/function/function_ai.dart';
 
+/// Wyświetla popup-dialog z prostym czatem z AI.
 void ai_screen(BuildContext context) {
-  final TextEditingController messageController = TextEditingController();
-  final ScrollController scrollController = ScrollController();
+  final TextEditingController messageController = TextEditingController(); // Kontroler pola tekstowego
+  final ScrollController scrollController = ScrollController(); // Kontroler do przewijania listy
 
-  List<Map<String, String>> messages = [];
+  List<Map<String, String>> messages = []; // Lista wiadomości w formacie {role, text}
   bool isLoading = false;
 
   showDialog(
@@ -13,10 +14,12 @@ void ai_screen(BuildContext context) {
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setState) {
+          // Wysyłanie wiadomości do AI
           Future<void> sendMessage() async {
             final input = messageController.text.trim();
             if (input.isEmpty) return;
 
+            // Dodanie wiadomości użytkownika do listy
             setState(() {
               messages.add({'role': 'user', 'text': input});
               messageController.clear();
@@ -24,18 +27,20 @@ void ai_screen(BuildContext context) {
             });
 
             try {
+              // Pobranie odpowiedzi od AI
               final aiResponse = await askAI(input);
               setState(() {
                 messages.add({'role': 'ai', 'text': aiResponse});
                 isLoading = false;
               });
 
-              // Прокрутка вниз
+              // Auto-przewinięcie listy na dół
               await Future.delayed(const Duration(milliseconds: 100));
               if (scrollController.hasClients) {
                 scrollController.jumpTo(scrollController.position.maxScrollExtent);
               }
             } catch (e) {
+              // Obsługa błędów (np. brak internetu, błąd API)
               setState(() {
                 messages.add({
                   'role': 'ai',
@@ -63,13 +68,16 @@ void ai_screen(BuildContext context) {
                         final isUser = msg['role'] == 'user';
 
                         return Align(
-                          alignment:
-                          isUser ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment: isUser
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
                           child: Container(
                             margin: const EdgeInsets.symmetric(vertical: 4),
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isUser ? Colors.blue[100] : Colors.grey[300],
+                              color: isUser
+                                  ? Colors.blue[100]
+                                  : Colors.grey[300],
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(msg['text'] ?? ''),

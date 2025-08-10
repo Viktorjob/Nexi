@@ -17,13 +17,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.playIntegrity,
-    // androidProvider: AndroidProvider.debug,
   );
-
   runApp(const MyApp());
 }
 
@@ -32,6 +28,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dostarczamy AuthBloc do całej aplikacji, zarządzającego stanem autoryzacji
     return BlocProvider(
       create: (context) => AuthBloc(),
       child: MaterialApp(
@@ -39,20 +36,23 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.blue),
         home: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
+            // Reagujemy na różne stany autoryzacji i wyświetlamy odpowiednie ekrany
             return state.map(
               initial: (_) => const LoginScreen(),
-              loading: (_) => const Scaffold(body: Center(child: CircularProgressIndicator())),
+              loading: (_) => const Scaffold(
+                  body: Center(child: CircularProgressIndicator())),
               authenticated: (s) => HomeScreen(user: s.user),
               unauthenticated: (_) => const LoginScreen(),
               error: (s) => LoginScreen(errorMessage: s.message),
               passwordResetSent: (_) => const ResetPasswordScreen(),
               emailVerificationSent: (_) {
                 final user = FirebaseAuth.instance.currentUser!;
-                return VerifyEmailScreen(user: user);
+                return VerifyEmailScreen(user: user); 
               },
             );
           },
         ),
+        // Definicja rout dla nawigacji
         routes: {
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegistrationScreen(),

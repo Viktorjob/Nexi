@@ -4,6 +4,7 @@ import 'package:nexi/auth/authentication/bloc/auth_bloc.dart';
 import 'package:nexi/auth/authentication/bloc/auth_event.dart';
 import 'package:nexi/auth/authentication/bloc/auth_state.dart';
 
+
 class LoginScreen extends StatefulWidget {
   final String? errorMessage;
 
@@ -14,17 +15,22 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Klucz formularza do walidacji
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+
+    // Jeśli ekran został otwarty z komunikatem błędu — pokazujemy  snackbar
     if (widget.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.errorMessage!), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(widget.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
         );
       });
     }
@@ -53,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Email
+                // Pole e-mail
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -67,7 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Password
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -81,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // BlocBuilder
+                // Obsługa stanu bloc i renderowanie UI zależnie od stanu
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     final String? errorMessage = state.maybeMap(
@@ -93,13 +98,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     return Column(
                       children: [
+                        // Komunikat błędu pod formularzem
                         if (errorMessage != null)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: Text(errorMessage,
-                                style: const TextStyle(color: Colors.red)),
+                            child: Text(
+                              errorMessage,
+                              style: const TextStyle(color: Colors.red),
+                            ),
                           ),
-
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -127,14 +134,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
 
                         const SizedBox(height: 12),
-
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/reset'),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/reset'),
                           child: const Text('Forgot password?'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
-                          child: const Text('Don\'t have an account? Sign up'),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/register'),
+                          child: const Text("Don't have an account? Sign up"),
                         ),
                       ],
                     );
@@ -148,6 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Waliduje formularz i wysyła zdarzenie logowania do [AuthBloc]
   void _submitLogin() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(AuthEvent.login(

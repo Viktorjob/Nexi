@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 part 'auth_state.freezed.dart';
 
+//  możliwe stany
 @freezed
 class AuthState with _$AuthState {
 

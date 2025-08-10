@@ -10,6 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   AuthBloc() : super(const AuthState.initial()) {
+    // Obsługa różnych typów zdarzeń autoryzacji
     on<AuthEvent>((event, emit) async {
       await event.map(
         login: (e) => _login(emit, e.email, e.password),
@@ -17,13 +18,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         logout: (e) => _logout(emit),
         resetPassword: (e) => _resetPassword(emit, e.email),
         clearError: (e) {
-          emit(const AuthState.initial());
+          emit(const AuthState.initial()); // Reset błędów do stanu początkowego
           return Future.value();
         },
       );
     });
   }
 
+  // Logowanie istniejącego użytkownika.
   Future<void> _login(Emitter<AuthState> emit, String email, String password) async {
     emit(const AuthState.loading());
     try {
@@ -34,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final user = userCredential.user;
 
+      // Wymaganie potwierdzenia adresu e-mail
       if (user != null && !user.emailVerified) {
         await _auth.signOut();
         emit(const AuthState.error('Email not verified. Please check your inbox.'));
@@ -47,7 +50,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-
+  // Rejestracja nowego użytkownika + zapis w bazie danych.
   Future<void> _register(Emitter<AuthState> emit, String email, String password, String username) async {
     emit(const AuthState.loading());
     try {
@@ -58,15 +61,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final user = userCredential.user;
 
-      
+      // Tworzymy wpis użytkownika w Realtime Database
       await FirebaseDatabase.instance.ref('users/${user!.uid}').set({
         'uid': user.uid,
         'email': user.email,
         'username': username,
-        'friendIds': [],   
+        'friendIds': [],
         'createdAt': ServerValue.timestamp,
       });
 
+      // Jeśli email niepotwierdzony — wysyłamy weryfikację
       if (!user.emailVerified) {
         await user.sendEmailVerification();
         emit(const AuthState.emailVerificationSent());
@@ -79,6 +83,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  // Wylogowanie użytkownika.
   Future<void> _logout(Emitter<AuthState> emit) async {
     emit(const AuthState.loading());
     try {
@@ -89,7 +94,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-
+  // Wysłanie linku resetującego hasło.
   Future<void> _resetPassword(Emitter<AuthState> emit, String email) async {
     emit(const AuthState.loading());
     try {
@@ -100,7 +105,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-
+  // Emituje stan zalogowanego użytkownika lub błąd.
   void _emitAuthenticated(Emitter<AuthState> emit, User? user) {
     if (user != null) {
       emit(AuthState.authenticated(user));
@@ -109,8 +114,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-
-
+  // Mapowanie kodów błędów Firebase na przyjazne komunikaty.
   String _mapAuthError(String code) {
     switch (code) {
       case 'invalid-email': return 'Invalid email.';

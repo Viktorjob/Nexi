@@ -16,26 +16,26 @@ class HomeScreen extends StatefulWidget {
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
-
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Subskrypcja na strumień listy przyjaciół
   StreamSubscription<List<Map<String, String>>>? _friendsSubscription;
+  // Aktualna lista przyjaciół przechowywana lokalnie
   List<Map<String, String>> _friends = [];
 
   @override
   void initState() {
     super.initState();
+    // Nasłuchujemy zmian w liście przyjaciół w czasie rzeczywistym
     _friendsSubscription = FriendService.subscribeToFriendsStream(widget.user.uid).listen((friendsList) {
       if (mounted) {
         setState(() {
-          _friends = friendsList;
+          _friends = friendsList; // Aktualizacja lokalnej listy przyjaciół
         });
       }
     });
   }
-
-
 
   void _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -44,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Otwiera profil wybranego przyjaciela (przechodzi do nowego ekranu)
   void _openFriendProfile(Map<String, String> friend) {
     Navigator.push(
       context,
@@ -59,34 +60,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    // Anulujemy subskrypcję przy zamykaniu widgetu, aby uniknąć wycieków pamięci
     _friendsSubscription?.cancel();
     super.dispose();
   }
 
-
+  // Pokazuje dialog dodawania nowego przyjaciela
   void _showAddFriend() {
     showAddFriendDialog(
       context: context,
       friends: _friends,
       onFriendAdded: (friend) {
-
+        // Tutaj możesz dodać dodatkową logikę po dodaniu przyjaciela
       },
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         automaticallyImplyLeading: true,
         actions: [
+          // Przycisk otwierający dialog dodawania przyjaciela
           IconButton(
             icon: const Icon(Icons.person_add),
             onPressed: _showAddFriend,
           ),
+          // Przycisk wylogowania
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
@@ -102,8 +104,10 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           Expanded(
+            // Jeśli lista przyjaciół jest pusta, wyświetlamy komunikat
             child: _friends.isEmpty
                 ? const Center(child: Text('Friends not added'))
+            // W przeciwnym razie lista przyjaciół w formie ListView
                 : ListView.builder(
               itemCount: _friends.length,
               itemBuilder: (context, index) {
@@ -111,16 +115,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 return ListTile(
                   leading: const Icon(Icons.person),
                   title: Text(friend['username'] ?? 'Unknown'),
+                  // Kliknięcie na element otwiera profil przyjaciela
                   onTap: () => _openFriendProfile(friend),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
+                      // Pokazuje dialog potwierdzający usunięcie przyjaciela
                       showDeleteFriendDialog(
                         context: context,
                         currentUid: widget.user.uid,
                         friend: friend,
                         onDeleted: () {
                           setState(() {
+                            // Usunięcie przyjaciela z lokalnej listy po potwierdzeniu
                             _friends.removeWhere(
                                     (f) => f['uid'] == friend['uid']);
                           });
@@ -137,5 +144,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-

@@ -6,6 +6,9 @@ import 'package:nexi/auth/authentication/bloc/auth_event.dart';
 import 'package:nexi/auth/authentication/bloc/auth_state.dart';
 import 'package:nexi/auth/screens/verify_email_screen.dart';
 
+/// Ekran rejestracji nowego użytkownika.
+/// Obsługuje walidację formularza, przesyłanie danych do [AuthBloc]
+/// oraz przekierowanie do ekranu weryfikacji e-maila.
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
@@ -14,7 +17,7 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Klucz formularza
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -23,6 +26,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   void initState() {
     super.initState();
+    // Reset błędów po wejściu na ekran
     context.read<AuthBloc>().add(const AuthEvent.clearError());
   }
 
@@ -30,6 +34,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        // Po wysłaniu e-maila weryfikacyjnego — przejdź do VerifyEmailScreen
         if (state is EmailVerificationSent) {
           final user = FirebaseAuth.instance.currentUser!;
           Navigator.of(context).pushReplacement(
@@ -57,8 +62,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
-
-                  // Username
                   TextFormField(
                     controller: _usernameController,
                     decoration: const InputDecoration(
@@ -70,8 +73,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     value!.isEmpty ? 'Enter username' : null,
                   ),
                   const SizedBox(height: 16),
-
-                  // Email
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -84,8 +85,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     value!.isEmpty ? 'Enter email' : null,
                   ),
                   const SizedBox(height: 16),
-
-                  // Password
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
@@ -98,8 +97,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     value!.length < 6 ? 'Minimum 6 characters' : null,
                   ),
                   const SizedBox(height: 16),
-
-                  // Confirm Password
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: true,
@@ -117,7 +114,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // BlocBuilder
+                  // Obsługa stanu bloc
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       final String? errorMessage = state.maybeMap(
@@ -141,9 +138,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: isLoading ? null : _submitRegistration,
+                              onPressed:
+                              isLoading ? null : _submitRegistration,
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -166,7 +165,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           const SizedBox(height: 12),
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Already have an account? Login'),
+                            child: const Text(
+                                'Already have an account? Login'),
                           ),
                         ],
                       );
@@ -181,6 +181,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
+  // Waliduje formularz i wysyła zdarzenie rejestracji do [AuthBloc]
   void _submitRegistration() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(AuthEvent.register(

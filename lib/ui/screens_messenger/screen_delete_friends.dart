@@ -12,9 +12,11 @@ void showDeleteFriendDialog({
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Remove a friend'),
+      // Treść dialogu z potwierdzeniem usunięcia przyjaciela po nazwie użytkownika
       content: Text('Delete ${friend['username']} from friends?'),
       actions: [
         TextButton(
+
           onPressed: () => Navigator.of(ctx).pop(),
           child: const Text('Cancel'),
         ),
@@ -22,11 +24,12 @@ void showDeleteFriendDialog({
           onPressed: () {
             Navigator.of(ctx).pop();
 
+            // Wywołanie metody usuwającej przyjaciela w bazie danych
             FriendService.deleteFriend(
               context: context,
               currentUid: currentUid,
               friendUid: friend['uid']!,
-              onSuccess: onDeleted,
+              onSuccess: onDeleted, // Callback do aktualizacji UI po usunięciu
             );
           },
           child: const Text('Delete'),

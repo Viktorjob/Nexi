@@ -9,7 +9,7 @@ void showAddFriendDialog({
   required void Function(Map<String, String>) onFriendAdded,
 }) {
   final TextEditingController uidController = TextEditingController();
-  final currentUser = FirebaseAuth.instance.currentUser;
+  final currentUser = FirebaseAuth.instance.currentUser; // Pobranie aktualnie zalogowanego użytkownika
 
   showDialog(
     context: context,
@@ -27,11 +27,13 @@ void showAddFriendDialog({
           ),
           ElevatedButton(
             onPressed: () async {
-              final friendUid = uidController.text.trim();
+              final friendUid = uidController.text.trim(); // Pobiera i oczyszcza wpisane UID
 
+              // Sprawdza, czy UID nie jest puste i czy użytkownik jest zalogowany
               if (friendUid.isNotEmpty && currentUser != null) {
                 Navigator.of(ctx).pop();
 
+                // Wywołanie funkcji dodającej przyjaciela
                 await FriendService.addFriend(
                   context: context,
                   currentUid: currentUser.uid,

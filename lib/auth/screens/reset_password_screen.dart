@@ -5,6 +5,7 @@ import 'package:nexi/auth/authentication/bloc/auth_event.dart';
 import 'package:nexi/auth/authentication/bloc/auth_state.dart';
 import 'package:nexi/auth/screens/login_screen.dart';
 
+/// Ekran odpowiedzialny za resetowanie hasła
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 
@@ -13,12 +14,16 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  // Klucz formularza do walidacji pól
   final _formKey = GlobalKey<FormState>();
+
+  // Kontroler tekstowy do pola e-mail
   final _emailController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    // Czyszczenie ewentualnych błędów w stanie BLoC po wejściu na ekran
     context.read<AuthBloc>().add(const AuthEvent.clearError());
   }
 
@@ -27,10 +32,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: Center(
-        child: SingleChildScrollView(
+        child: SingleChildScrollView( // umożliwia przewijanie w przypadku małego ekranu
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Form(
-            key: _formKey,
+            key: _formKey, // przypisanie klucza formularza
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -45,7 +50,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   style: TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
-
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -54,14 +58,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
+                  // Prosta walidacja: pole nie może być puste
                   validator: (value) =>
                   value!.isEmpty ? 'Enter your email' : null,
                 ),
                 const SizedBox(height: 24),
 
+                // Obsługa stanu logiki BLoC (wysyłanie resetu hasła)
                 BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
+                    // Obsługa reakcji na zmianę stanu
                     state.mapOrNull(
+                      // Jeśli wysłano e-mail resetujący
                       passwordResetSent: (_) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -70,6 +78,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         );
                         Navigator.pop(context);
                       },
+                      // Jeśli wystąpił błąd
                       error: (s) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -135,6 +144,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     );
   }
 
+  // Funkcja wywoływana po kliknięciu przycisku resetu hasła
   void _resetPassword() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
